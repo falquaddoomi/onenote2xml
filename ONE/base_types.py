@@ -13,6 +13,8 @@
 #   limitations under the License.
 #
 
+from sys import platform
+
 from __future__ import annotations
 import locale
 from .exception import ArgumentException
@@ -87,18 +89,31 @@ def Utf16BytesToStr(src:bytes):
 
 LCID2Encoding = {}
 
-def MbcsBytesToStr(src:bytes, lcid, charset):
-	#encoding = LCID2Encoding.get(lcid, None)
-	#if encoding is None:
-	#	import win32api
-	#	locale_name = win32api.LCIDToLocaleName(lcid, 0)
-	#	prev_locale = locale.getlocale(locale.LC_CTYPE)
-	#	locale.setlocale(locale.LC_CTYPE, str(lcid))
-	#	encoding = locale.getpreferredencoding(do_setlocale=False)
-	#	LCID2Encoding[lcid] = encoding
-	#	locale.setlocale(locale.LC_CTYPE, prev_locale)
-		# Get locale by lcid
-	return str(src, encoding="mbcs")
+if platform == "win32":
+	def MbcsBytesToStr(src:bytes, lcid, charset):
+		#encoding = LCID2Encoding.get(lcid, None)
+		#if encoding is None:
+		#	import win32api
+		#	locale_name = win32api.LCIDToLocaleName(lcid, 0)
+		#	prev_locale = locale.getlocale(locale.LC_CTYPE)
+		#	locale.setlocale(locale.LC_CTYPE, str(lcid))
+		#	encoding = locale.getpreferredencoding(do_setlocale=False)
+		#	LCID2Encoding[lcid] = encoding
+		#	locale.setlocale(locale.LC_CTYPE, prev_locale)
+			# Get locale by lcid
+		return str(src, encoding="mbcs")
+else:
+	# we have no mbcs support on non-windows platforms, so we will try a few common encodings instead
+	def MbcsBytesToStr(src: bytes, lcid, charset):
+		encodings = ("utf-8", "cp1252", "latin-1")
+
+		for encoding in encodings:
+			try:
+				return src.decode(encoding)
+			except UnicodeDecodeError:
+				pass
+
+		return src.decode("utf-8", errors="replace")
 
 def StringInStorageBuffer(reader:onestore_reader):
 	'''

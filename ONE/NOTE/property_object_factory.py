@@ -13,6 +13,8 @@
 #   limitations under the License.
 #
 
+from sys import platform
+
 from types import SimpleNamespace
 from ..property_id import *
 from ..STORE.property import Property
@@ -415,8 +417,12 @@ class LayoutAlignmentInParentProperty(LayoutAlignmentProperty):
 			self.min_verbosity = 4
 		return
 
-from win32api import GetUserDefaultLangID
-DefaultLangID = GetUserDefaultLangID()
+if platform == "win32":
+	from win32api import GetUserDefaultLangID
+	DefaultLangID = GetUserDefaultLangID()
+else:
+	DefaultLangID = 0x0409  # English (United States)
+
 class LanguageIDObject(IntPropertyObject):
 
 	def __init__(self, _property:Property, **kwargs):
